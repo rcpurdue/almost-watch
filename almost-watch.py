@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # almost-watch, rcampbel@purdue.edu, 2023-02-07
 
-import time
+# import time
 import math
 import tkinter as tk
 
+ACCURACY = int(60 / 5)
 CANVAS_SIZE = 1024
 DEG_SEP = 360 / 12
 RADIUS = CANVAS_SIZE / 2
@@ -14,37 +15,41 @@ OUTLINE_COLOR = 'white'
 FILL_COLOR = 'white'
 
 
-def draw_clock_face(canvas):
-    # Outline
-    canvas.create_oval(RADIUS-RADIUS/2, RADIUS-RADIUS/2, RADIUS+RADIUS/2, RADIUS+RADIUS/2, outline=OUTLINE_COLOR)
+class AlmostWatch:
+    def __init__(self):
+        self.positions = [deg for deg in range(360, 0, int(-360 / ACCURACY))]
+        self.step = 0
+        self.arc = None
+        self.root = tk.Tk()
+        self.canvas = tk.Canvas(self.root, bg=BACKGROUND_COLOR, height=CANVAS_SIZE, width=CANVAS_SIZE)
 
-    # Indices - based on https://stackoverflow.com/a/36732748
-    for i in range(12):
-        x = RADIUS/2 * math.cos(i * DEG_SEP * math.pi / 180) + RADIUS
-        y = RADIUS/2 * math.sin(i * DEG_SEP * math.pi / 180) + RADIUS
-        canvas.create_rectangle(x-TICK_SIZE/2, y-TICK_SIZE/2, x+TICK_SIZE/2, y+TICK_SIZE/2, fill=FILL_COLOR,
+        # Draw face outline
+        self.canvas.create_oval(RADIUS-RADIUS/2, RADIUS-RADIUS/2, RADIUS+RADIUS/2, RADIUS+RADIUS/2,
                                 outline=OUTLINE_COLOR)
 
+        # Draw indices - ref: https://stackoverflow.com/a/36732748
+        for i in range(12):
+            x = RADIUS/2 * math.cos(i * DEG_SEP * math.pi / 180) + RADIUS
+            y = RADIUS/2 * math.sin(i * DEG_SEP * math.pi / 180) + RADIUS
+            self.canvas.create_rectangle(x-TICK_SIZE/2, y-TICK_SIZE/2, x+TICK_SIZE/2, y+TICK_SIZE/2, fill=FILL_COLOR,
+                                         outline=OUTLINE_COLOR)
 
-def run(canvas):
+        self.canvas.pack()
+        self.update()
+        self.root.mainloop()
 
-    i = 0
-    positions = [90, 0, 270, 180]
+    def update(self):
 
-    while True:
-        arc = canvas.create_arc(RADIUS-RADIUS/2, RADIUS-RADIUS/2, RADIUS+RADIUS/2, RADIUS+RADIUS/2,
-                                fill=FILL_COLOR, outline=OUTLINE_COLOR,
-                                start=positions[i % 4], extent=90)
-        i += 1
-        root.update()
-        time.sleep(1)
-        canvas.delete(arc)
-        root.update()
+        if self.arc is not None:
+            self.canvas.delete(self.arc)
+
+        self.arc = self.canvas.create_arc(RADIUS-RADIUS/2, RADIUS-RADIUS/2, RADIUS+RADIUS/2, RADIUS+RADIUS/2,
+                                          fill=FILL_COLOR, outline=OUTLINE_COLOR,
+                                          start=self.positions[self.step % ACCURACY], extent=360/ACCURACY)
+        self.step += 1
+        self.root.update()
+        self.root.after(1000, self.update)  # Ref: https://stackoverflow.com/a/66101733
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    canvas = tk.Canvas(root, bg=BACKGROUND_COLOR, height=CANVAS_SIZE, width=CANVAS_SIZE)
-    draw_clock_face(canvas)
-    canvas.pack()
-    run(canvas)  # root.mainloop()
+    AlmostWatch()
