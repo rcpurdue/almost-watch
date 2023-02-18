@@ -5,6 +5,7 @@ import datetime
 import math
 import tkinter as tk
 from tkinter import font
+import random
 
 CANVAS_SIZE = 1024
 DEG_SEP = 360 / 12
@@ -15,22 +16,14 @@ OUTLINE_COLOR = 'white'
 FILL_COLOR = 'white'
 FONT_FAMILY = 'bitstream charter'
 FORMAT_12_HOUR = True
+UPDATE_MS = 1000
 
 
 class AlmostWatch:
     def __init__(self):
-        self.accuracy = 15
+        self.accuracy = 5
         self.divisions = int(60 / self.accuracy)
         self.positions = [deg for deg in range(360, 0, int(-360 / self.divisions))]
-
-        # Testing
-        self.accuracy_set = [5, 10, 15, 20, 30]
-        self.accuracy_step = 0
-        self.accuracy = self.accuracy_set[0]
-        self.divisions = int(60 / self.accuracy)
-        self.positions = [deg for deg in range(360, 0, int(-360 / self.divisions))]
-
-        self.step = 0
         self.min_hand = None
         self.root = tk.Tk()
         self.canvas = tk.Canvas(self.root, bg=BACKGROUND_COLOR, height=CANVAS_SIZE, width=CANVAS_SIZE)
@@ -54,7 +47,7 @@ class AlmostWatch:
         x1, y1, x2, y2 = self.canvas.bbox(self.min_hand)
         x = x1 + (x2 - x1) / 2
         y = y1 + (y2 - y1) / 2
-        print(x1, y1, x2, y2, ':', x, y)
+        # print(x1, y1, x2, y2, ':', x, y)
         return x, y
 
     def update(self):
@@ -66,13 +59,15 @@ class AlmostWatch:
 
         # Draw minutes
         minutes = datetime.datetime.now().minute
-        pos_index = math.floor(minutes / (60 / self.accuracy))
-
+        minutes = random.randint(0, 59)
+        print(minutes)
+        pos_index = math.floor(minutes / self.accuracy)
         self.min_hand = self.canvas.create_arc(RADIUS-RADIUS/2, RADIUS-RADIUS/2, RADIUS+RADIUS/2, RADIUS+RADIUS/2,
                                                fill=FILL_COLOR, outline=OUTLINE_COLOR,
-                                               start=self.positions[self.step]+90, extent=-360/self.divisions)
+                                               start=self.positions[pos_index]+90, extent=-360/self.divisions)
         x, y = self.calc_min_text_pos()
-        self.min_text = self.canvas.create_text(x, y, text=str(self.step),
+        text = str(minutes)
+        self.min_text = self.canvas.create_text(x, y, text=text,
                                                 font=font.Font(family=FONT_FAMILY, size=32, weight="bold"),
                                                 fill=BACKGROUND_COLOR)
 
@@ -88,18 +83,8 @@ class AlmostWatch:
                                 font=font.Font(family=FONT_FAMILY, size=128, weight="bold", underline=False),
                                 fill=OUTLINE_COLOR)
 
-        # Testing
-        if self.step < self.divisions-1:
-            self.step += 1
-        else:
-            self.accuracy = self.accuracy_set[self.accuracy_step % len(self.accuracy_set)]
-            self.accuracy_step += 1
-            self.divisions = int(60 / self.accuracy)
-            self.positions = [deg for deg in range(360, 0, int(-360 / self.divisions))]
-            self.step = 0
-
         self.root.update()
-        self.root.after(1000, self.update)  # Ref: https://stackoverflow.com/a/66101733
+        self.root.after(UPDATE_MS, self.update)  # Ref: https://stackoverflow.com/a/66101733
 
 
 if __name__ == "__main__":
