@@ -70,7 +70,7 @@ class AlmostWatch:
 
         self.min_hand = self.canvas.create_arc(RADIUS-RADIUS/2, RADIUS-RADIUS/2, RADIUS+RADIUS/2, RADIUS+RADIUS/2,
                                                fill=FILL_COLOR, outline=OUTLINE_COLOR,
-                                               start=self.positions[self.step], extent=360/self.divisions)
+                                               start=self.positions[self.step]+90, extent=-360/self.divisions)
         x, y = self.calc_min_text_pos()
         self.min_text = self.canvas.create_text(x, y, text=str(self.step),
                                                 font=font.Font(family=FONT_FAMILY, size=32, weight="bold"),
